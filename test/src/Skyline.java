@@ -1,3 +1,5 @@
+// Several buildings can start at the same X position!
+
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Comparator;

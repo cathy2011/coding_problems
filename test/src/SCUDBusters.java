@@ -1,3 +1,7 @@
+// Got WA for several times because double precision problems.
+// Use integers whenever you can, in order to not lose any
+// precision.
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;

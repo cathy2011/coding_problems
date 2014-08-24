@@ -1,3 +1,5 @@
+// The two numbers could come in an arbitrary order.
+
 import java.util.Iterator;
 import java.util.Scanner;
 

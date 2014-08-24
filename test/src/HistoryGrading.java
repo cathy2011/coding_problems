@@ -1,3 +1,5 @@
+// Initially confused with 'ranking' versus 'event order'.
+
 import java.util.Comparator;
 import java.util.Scanner;
 
