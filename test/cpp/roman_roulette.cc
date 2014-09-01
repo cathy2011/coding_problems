@@ -1,3 +1,6 @@
+// 130 Roman Roulette
+// 14127005 Accepted  C++11 0.012 2014-09-01 02:27:57
+
 #include <iostream>
 #include <cstdio>
 
@@ -39,6 +42,8 @@ static int GetTheSurvivor(int n, int k, int start) {
       persons[tmp_pos] = pos;
       persons[prev] = tmp_pos;
     }
+
+    pos = persons[tmp_pos];
   }
   return pos;
 }
