@@ -32,17 +32,22 @@ void Process(int n, int k, int m) {
       };
 
   // Functions for going clockwise and counter-clockwise.
-  std::function<void(int*, int)> clockwise =
-      [&next, &advance](int* p, int times) {
-        advance(next, p, times);
-      };
-  std::function<void(int*, int)> counter_clockwise =
-      [&prev, &advance](int* p, int times) {
-        advance(prev, p, times);
-      };
-  // The following bindings did not work. Not sure why.
-  // std::function<void(int*, int)> clockwise = std::bind(advance, std::placeholders::_1, next);
-  // std::function<void(int*, int)> counter_clockwise = std::bind(advance, std::placeholders::_1, prev);
+  /*
+   std::function<void(int*, int)> clockwise =
+   [&next, &advance](int* p, int times) {
+   advance(next, p, times);
+   };
+   std::function<void(int*, int)> counter_clockwise =
+   [&prev, &advance](int* p, int times) {
+   advance(prev, p, times);
+   };
+   */
+  // ------The following bindings did not work. Not sure why.
+  // Now works!!!
+  std::function<void(int*, int)> clockwise = std::bind(
+      advance, std::cref(next), std::placeholders::_1, std::placeholders::_2);
+  std::function<void(int*, int)> counter_clockwise = std::bind(
+      advance, std::cref(prev), std::placeholders::_1, std::placeholders::_2);
 
   int remaining = n;
   int pos_1 = 0;  // goes counter-clockwise.
