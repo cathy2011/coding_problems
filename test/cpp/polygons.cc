@@ -23,16 +23,17 @@ inline double GetY(const Point& origin, const Point& a) {
 }
 
 double CrossProduct(const Point& origin, const Point& a, const Point& b) {
-  return  GetX(origin, a) * GetY(origin, b) - GetY(origin, a) * GetX(origin, b);
+  return GetX(origin, a) * GetY(origin, b) - GetY(origin, a) * GetX(origin, b);
 }
 
 double DotProduct(const Point& origin, const Point& a, const Point& b) {
-  return  GetX(origin, a) * GetX(origin, b) + GetY(origin, a) * GetY(origin, b);
+  return GetX(origin, a) * GetX(origin, b) + GetY(origin, a) * GetY(origin, b);
 }
 
 // Check whether a point lies inside or on a convex hull.
 bool Contains(const Convex& convex, const Point& p) {
-  for (unsigned i = 0, j = 1; i < convex.size(); ++i, j = (i + 1) % convex.size()) {
+  for (unsigned i = 0, j = 1; i < convex.size();
+      ++i, j = (i + 1) % convex.size()) {
     // 'p' must lies left to segment from 'i' to 'j'.
     if (CrossProduct(convex[i], convex[j], p) > 0) {  // On right side
       return false;
@@ -42,15 +43,15 @@ bool Contains(const Convex& convex, const Point& p) {
 }
 
 bool OnSegment(const Point& p, const Point& a, const Point& b) {
-  return p.first >= std::min(a.first, b.first) &&
-         p.first <= std::max(a.first, b.first) &&
-         p.second >= std::min(a.second, b.second) &&
-         p.second <= std::max(a.second, b.second);
+  return p.first >= std::min(a.first, b.first)
+      && p.first <= std::max(a.first, b.first)
+      && p.second >= std::min(a.second, b.second)
+      && p.second <= std::max(a.second, b.second);
 }
 
 // Return the intersection point of two segments.
-bool GetIntersection(const Point& a, const Point& b, const Point& c, const Point& d,
-                     Point* intersection) {
+bool GetIntersection(const Point& a, const Point& b, const Point& c,
+                     const Point& d, Point* intersection) {
   double a_1 = b.second - a.second;
   double b_1 = a.first - b.first;
   double c_1 = a_1 * a.first + b_1 * a.second;
@@ -69,12 +70,14 @@ bool GetIntersection(const Point& a, const Point& b, const Point& c, const Point
 
 // Return the area of the convex hull resultant from the given set of points.
 double GetArea(const std::vector<Point>& points) {
-  if (points.size() < 3) { return 0.00; }
+  if (points.size() < 3) {
+    return 0.00;
+  }
 
   Point start = *std::min_element(points.begin(), points.end(),
                                   [](const Point& a, const Point& b) {
-    return a.first < b.first;
-  });
+                                    return a.first < b.first;
+                                  });
 
   double area = 0.0;
   Point next = start;
@@ -82,7 +85,9 @@ double GetArea(const std::vector<Point>& points) {
     // Find the point after 'next'.
     int after = -1;
     for (unsigned i = 0; i < points.size(); ++i) {
-      if (points[i] == next) { continue; }
+      if (points[i] == next) {
+        continue;
+      }
       if (after < 0 || CrossProduct(next, points[after], points[i]) > 0) {
         after = i;
       }
@@ -133,16 +138,16 @@ int main(int argc, char* argv[]) {
       for (unsigned j = 0; j < polygon_2.size(); ++j) {
         int j_to = (j + 1) % polygon_2.size();
         Point p;
-        if (GetIntersection(polygon_1[i], polygon_1[i_to],
-                            polygon_2[j], polygon_2[j_to],
-                            &p)) {
+        if (GetIntersection(polygon_1[i], polygon_1[i_to], polygon_2[j],
+                            polygon_2[j_to], &p)) {
           intersection.push_back(p);
         }
       }
     }
     // Compute the area.
     std::cout << std::setw(8) << std::fixed << std::setprecision(2)
-              << GetArea(polygon_1) + GetArea(polygon_2) - 2.0 * GetArea(intersection);
+        << GetArea(polygon_1) + GetArea(polygon_2)
+            - 2.0 * GetArea(intersection);
   }
   std::cout << std::endl;
 
