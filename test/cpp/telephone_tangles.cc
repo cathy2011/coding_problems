@@ -1,24 +1,27 @@
 // 139 - Telephone Tangles
+// Give up on this one. Likely some tricky inputs fail this code.
 
+#include <algorithm>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <string>
-#include <algorithm>
 #include <iterator>
-#include <cstdlib>
+#include <string>
 
 namespace {
 
-// Organize all given destinations in a tree.
+// Organize all given destinations in a tries tree.
 struct Node {
   Node() {
     std::fill(std::begin(next), std::end(next), nullptr);
     rate = -1;  // Rate invalid.
+    real = false;
   }
 
   std::string destination;
   int rate;
   Node* next[10];
+  bool real;
 };
 
 void Add(Node* node, const std::string& path, unsigned pos,
@@ -27,6 +30,7 @@ void Add(Node* node, const std::string& path, unsigned pos,
     // 'node' is the node which should contain these information.
     node->destination.assign(dest);
     node->rate = rate;
+    node->real = true;
     return;
   }
   // Consume path[pos].
@@ -87,23 +91,19 @@ int main(int agrc, char* argv[]) {
     int minutes;
     std::cin >> minutes;
 
-    if (!Valid(token)) {
-      std::cout << std::setw(16) << std::left << token << std::setw(25)
-                << std::left << "Unknown" << std::setw(10) << std::right << ""
-                << std::setw(5) << minutes << std::setw(6) << "" << std::setw(7)
-                << "-1.00" << std::endl;
-      continue;
-    }
-
-    if (token[0] != '0') {  // local
-      std::cout << std::setw(16) << std::left << token << std::setw(25)
-                << std::left << "Local" << std::setw(10) << std::right << token
+    if (!Valid(token) || token[0] != '0') {  // local
+      std::cout << std::setw(16) << std::left << token << std::setw(5)
+                << std::left << "Local" << std::setw(30) << std::right << token
                 << std::setw(5) << minutes << std::setw(6) << "0.00"
                 << std::setw(7) << "0.00" << std::endl;
     } else {
       unsigned pos = 0;
       const Node* n = Find(root, token, &pos);
-      if (n->rate >= 0) {
+      if (n->real
+          && ((token[1] == '0' && pos >= 3 && pos <= 5
+              && token.length() - pos >= 4 && token.length() - pos <= 10)
+              || (token[1] != '0' && pos >= 2 && pos <= 6
+                  && token.length() - pos >= 4 && token.length() - pos <= 7))) {
         std::cout << std::setw(16) << std::left << token << std::setw(25)
                   << std::left << n->destination << std::setw(10) << std::right
                   << token.substr(pos) << std::setw(5) << minutes
