@@ -2,13 +2,16 @@
 
 // Search
 
+// 14169386 148 Anagram checker Accepted  C++11 0.142 2014-09-08 23:00:58
+
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <iostream>
+#include <iterator>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <iterator>
-#include <functional>
 
 namespace {
 
@@ -35,8 +38,12 @@ class AnagramChecker {
   std::vector<std::array<int, 26>> dictionary_2_;
 
   // The transform function that can transform a word in the string
-  // form to the second form.
+  // form to the second form, i.e. the array form.
   std::function<std::array<int, 26>(const std::string&)> transform_func_;
+
+  // The tokenizer function that can be called to return all words in
+  // a given string as a vector.
+  std::function<std::vector<std::string>(const std::string&)> tokenizer_;
 };
 
 AnagramChecker::AnagramChecker(const std::vector<std::string>& words)
@@ -51,6 +58,16 @@ AnagramChecker::AnagramChecker(const std::vector<std::string>& words)
     }
     return word_2;
   };
+  tokenizer_ = [](const std::string& phrase) {
+    std::vector<std::string> words;
+    std::string word;
+    std::istringstream iss(phrase);
+    while (iss >> word) {
+      words.push_back(word);
+    }
+    std::sort(words.begin(), words.end());
+    return words;
+  };
   std::sort(dictionary_.begin(), dictionary_.end());
   std::transform(dictionary_.begin(), dictionary_.end(),
                  std::back_inserter(dictionary_2_), transform_func_);
@@ -59,13 +76,22 @@ AnagramChecker::AnagramChecker(const std::vector<std::string>& words)
 
 std::vector<std::string> AnagramChecker::Check(
     const std::string& phrase) const {
+  std::vector<std::string> sorted_original = tokenizer_(phrase);
   std::array<int, 26> phrase_2 = transform_func_(phrase);
   std::vector<std::string> result;
   std::vector<std::vector<std::string>> results;
   this->Search(&phrase_2, 0, &result, &results);
 
   std::vector<std::string> ret;  // for storing all found anagrams.
-  for (const auto& result : results) {
+  for (auto& result : results) {
+    std::sort(result.begin(), result.end());  // Should be unnecessary.
+
+    // Do not output 'result' if it is the same as the original phrase.
+    if (std::equal(sorted_original.begin(), sorted_original.end(),
+                   result.begin())) {
+      continue;
+    }
+
     std::string str;
     for (const auto& word : result) {
       if (!str.empty()) {
@@ -110,7 +136,7 @@ void AnagramChecker::Search(
   }
 
   // Or not take it.
-  Search(remaining, to_check, result, results);
+  Search(remaining, to_check + 1, result, results);
 }
 
 }
@@ -130,7 +156,7 @@ int main(int argc, char* argv[]) {
   while (std::getline(std::cin, word) && word != "#") {
     std::vector<std::string> results = checker.Check(word);
     for (const auto& result : results) {
-      std::cout << word << " -> " << result << std::endl;
+      std::cout << word << " = " << result << std::endl;
     }
   }
 
