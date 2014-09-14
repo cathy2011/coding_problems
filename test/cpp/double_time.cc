@@ -1,11 +1,12 @@
-// 150 - Double Time
+// 150 - Double Time, second version
+
+// 14203691  150 Double Time Accepted  C++11 0.065 2014-09-14 21:10:18
 
 // Simulation
 
 #include <iostream>
 #include <string>
 #include <map>
-#include <sstream>
 
 namespace {
 
@@ -14,7 +15,7 @@ enum WeekDay {
   NumOfWeekdays = 7,
 };
 
-std::map<WeekDay, std::string> weekday_to_str = {
+const std::map<WeekDay, std::string> weekday_to_str = {
     {Monday, "Monday"},
     {Tuesday, "Tuesday"},
     {Wednesday, "Wednesday"},
@@ -24,7 +25,7 @@ std::map<WeekDay, std::string> weekday_to_str = {
     {Sunday, "Sunday"},
 };
 
-std::map<std::string, WeekDay> str_to_weekday = {
+const std::map<std::string, WeekDay> str_to_weekday = {
     {"Monday", Monday},
     {"Tuesday", Tuesday},
     {"Wednesday", Wednesday},
@@ -55,7 +56,7 @@ std::map<Month, std::string> month_to_str = {
     {December, "December"},
 };
 
-std::map<std::string, Month> str_to_month = {
+const std::map<std::string, Month> str_to_month = {
     {"January", January},
     {"February", February},
     {"March", March},
@@ -70,114 +71,105 @@ std::map<std::string, Month> str_to_month = {
     {"December", December},
 };
 
-std::map<Month, int> days_in_month_leap = {
-    {January, 31},
-    {February, 29},
-    {March, 31},
-    {April, 30},
-    {May, 31},
-    {June, 30},
-    {July, 31},
-    {August, 31},
-    {September, 30},
-    {October, 31},
-    {November, 30},
-    {December, 31},
+enum CalendarType {
+  OLD_CALENDAR = 0, NEW_CALENDAR, NumOfCalendars,
 };
 
-std::map<Month, int> days_in_month_non_leap = {
-    {January, 31},
-    {February, 28},
-    {March, 31},
-    {April, 30},
-    {May, 31},
-    {June, 30},
-    {July, 31},
-    {August, 31},
-    {September, 30},
-    {October, 31},
-    {November, 30},
-    {December, 31},
-};
-
-class MyTime {
- public:
-  MyTime(bool old, WeekDay dow, int dom, Month moy, int year)
-      : old_(old), day_of_week_(dow), day_of_month_(dom), month_of_year_(moy), year_(year) {
-
+bool IsLeap(int year, CalendarType cal) {
+  if (cal == OLD_CALENDAR) {
+    return year % 4 == 0;
   }
+  return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+}
 
-  // Prefix increment
-  void operator ++() {
-    day_of_week_ = (day_of_week_ + 1) % NumOfWeekdays;
+const int dom[2][NumOfMonths] = {
+    {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+    {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+};
 
-    const std::map<Month, int>& m2d = IsLeap() ? days_in_month_leap : days_in_month_non_leap;
-    Month month = static_cast<Month>(month_of_year_);
-    if (++day_of_month_ > m2d.at(month)) {
-      day_of_month_ -= m2d.at(month);
-      if (++month_of_year_ >= NumOfMonths) {
-        month_of_year_ -= NumOfMonths;
-        ++year_;
+int doy[NumOfCalendars][600];  // Start from 1582/10/05 and 10/15 respectively.
+int acc_dom[2][NumOfMonths];
+
+void Preprocess() {
+  for (int year = 1582, diff = 0; year < 2101; ++year, ++diff) {
+    for (CalendarType cal = OLD_CALENDAR; cal < NumOfCalendars; cal = static_cast<CalendarType>(cal + 1)) {
+      if (year == 1582) {
+        doy[cal][diff] = 0;
+      } else {
+        doy[cal][diff] = doy[cal][diff - 1] + (IsLeap(year, cal) ? 366 : 365);
       }
     }
   }
-
-  bool operator ==(const MyTime& o) {
-    return
-        day_of_week_ == o.day_of_week_ &&
-        day_of_month_ == o.day_of_month_ &&
-        month_of_year_ == o.month_of_year_ &&
-        year_ == o.year_;
-  }
-
-  bool operator !=(const MyTime& o) {
-    return !(*this == o);
-  }
-
-  std::string ToString() const {
-    std::ostringstream oss;
-    oss << weekday_to_str[static_cast<WeekDay>(day_of_week_)] << " "
-        << day_of_month_ << (old_ ? "*" : "") << " "
-        << month_to_str[static_cast<Month>(month_of_year_)] << " "
-        << year_;
-    return oss.str();
-  }
-
- private:
-  bool IsLeap() {
-    if (old_) {
-      return year_ % 4 == 0;
+  for (Month m = January; m < NumOfMonths; m = static_cast<Month>(m + 1)) {
+    if (m == January) {
+      acc_dom[0][m] = 0;
+      acc_dom[1][m] = 0;
+    } else {
+      acc_dom[0][m] = acc_dom[0][m - 1] + dom[0][m - 1];
+      acc_dom[1][m] = acc_dom[1][m - 1] + dom[1][m - 1];
     }
-    return (year_ % 4 == 0 && year_ % 100 != 0) || year_ % 400 == 0;
+  }
+}
+
+int ddd[NumOfCalendars] = {5, 15};
+
+int GetNumOfDays(int y, Month m, int d, CalendarType cal) {
+  int days = 0;
+  // Align the year first.
+  days += doy[cal][y - 1582];
+  // Align the month.
+  int is_leap = IsLeap(y, cal);
+  days += acc_dom[is_leap][m] - acc_dom[is_leap][October];
+  // Align the day
+  days += d - ddd[cal];
+  return days;
+}
+
+void GetDate(int* y, Month* m, int* d, int days, CalendarType cal) {
+  int year = 0;
+  while (doy[cal][year + 1] < days) { ++year; }
+  days -= doy[cal][year];
+  *y = 1582 + year;
+
+  days += ddd[cal];
+
+  int is_leap = IsLeap(*y + 1, cal);
+  *m = October;
+  while (days > dom[is_leap][*m]) {
+    days -= dom[is_leap][*m];
+    if (*m == December) {
+      *y += 1;
+      *m = January;
+    } else {
+      *m = static_cast<Month>(*m + 1);
+    }
   }
 
-  bool old_;
-  int day_of_week_;
-  int day_of_month_;
-  int month_of_year_;
-  int year_;
-};
-
-std::ostream& operator<<(std::ostream& out, const MyTime& t) {
-  return out << t.ToString();
+  *d = days;
 }
+
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
+  Preprocess();
 
   std::string week, month;
   int day, year;
   while (std::cin >> week && week != "#") {
     std::cin >> day >> month >> year;
-    MyTime old_day(true, Friday, 5, October, 1582);
-    MyTime new_day(false, Friday, 15, October, 1582);
-    MyTime target(true /* meaningless here */, str_to_weekday.at(week), day, str_to_month.at(month), year);
-    while (old_day != target && new_day != target) {
-      ++old_day;
-      ++new_day;
+    // Treat it as an old date.
+    int days = GetNumOfDays(year, str_to_month.at(month), day, OLD_CALENDAR);
+    if ((Friday + days) % NumOfWeekdays == str_to_weekday.at(week)) {  // it is an old date.
+      int y, d; Month m;
+      GetDate(&y, &m, &d, days, NEW_CALENDAR);
+      std::cout << week << " " << d << " " << month_to_str[m] << " " << y << std::endl;
+    } else {
+      days = GetNumOfDays(year, str_to_month.at(month), day, NEW_CALENDAR);
+      int y, d; Month m;
+      GetDate(&y, &m, &d, days, OLD_CALENDAR);
+      std::cout << week << " " << d << "* " << month_to_str[m] << " " << y << std::endl;
     }
-    std::cout << (old_day == target ? new_day : old_day) << std::endl;
   }
 
   return 0;
