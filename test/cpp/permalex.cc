@@ -23,16 +23,16 @@ int Compute(const std::string& str) {
   });
 
   int precedes = 0;
-  for (int pos = 0; pos < static_cast<int>(str.length()) - 1; ++pos) {
+  for (int pos = 0; pos < static_cast<int>(str.length()); ++pos) {
     // Compute #of permutations starting from pos + 1.
-    long long p = prod(str.length() - 1 - pos);
+    long long p = prod(str.length() - pos);
     std::for_each(freq.begin(), freq.end(), [&](const int& c) {
       p /= prod(c);
     });
 
     std::for_each(freq.begin(), freq.begin() + str.at(pos) - 'a',
                   [&](const int& c) {
-                    precedes += p * c;
+                    precedes += p * c / (str.length() - pos);
                   });
 
     --freq[str.at(pos) - 'a'];
